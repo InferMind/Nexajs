@@ -1,0 +1,366 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Base Models
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  active    Boolean  @default(true)
+  avatar    String?
+  phone     String?
+  timezone  String   @default("UTC")
+  locale    String   @default("en")
+  lastLogin DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+
+  // Audit
+  createdBy Int?
+  updatedBy Int?
+
+  @@map("users")
+}
+
+model Company {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  description String?
+  website     String?
+  logo        String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users User[]
+
+  // Audit
+  createdBy Int?
+  updatedBy Int?
+
+  @@map("companies")
+}
+
+model Partner {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  email       String?  @unique
+  phone       String?
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  postalCode  String?
+  website     String?
+  isCustomer  Boolean  @default(false)
+  isSupplier  Boolean  @default(false)
+  isEmployee  Boolean  @default(false)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+
+  // Audit
+  createdBy Int?
+  updatedBy Int?
+
+  @@map("partners")
+}
+
+// Enums
+enum Role {
+  USER
+  ADMIN
+  MANAGER
+  SUPER_ADMIN
+}
+
+// Audit Trail
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  table     String
+  recordId  Int
+  action    String   // CREATE, UPDATE, DELETE
+  oldValues Json?
+  newValues Json?
+  userId    Int?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+// System Configuration
+model SystemConfig {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  description String?
+  type        String   @default("string") // string, number, boolean, json
+  category    String   @default("general")
+  editable    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+// File Storage
+model File {
+  id          Int      @id @default(autoincrement())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  path        String
+  url         String?
+  hash        String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  uploadedBy Int?
+  company    Company? @relation(fields: [companyId], references: [id])
+  companyId  Int?
+
+  @@map("files")
+}
+
+// Notifications
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  read      Boolean  @default(false)
+  data      Json?
+  createdAt DateTime @default(now())
+  readAt    DateTime?
+
+  @@map("notifications")
+}
+
+// Sessions
+model Session {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
+}
+
+// Email Management
+model EmailDelivery {
+  id        Int      @id @default(autoincrement())
+  messageId String
+  to        String[]
+  subject   String
+  template  String?
+  status    String
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@map("email_deliveries")
+}
+
+model ScheduledEmail {
+  id           Int      @id @default(autoincrement())
+  to           String[]
+  cc           String[]
+  bcc          String[]
+  subject      String
+  html         String?
+  text         String?
+  template     String?
+  templateData Json?
+  priority     String   @default("normal")
+  scheduledAt  DateTime
+  status       String   @default("pending")
+  sentAt       DateTime?
+  error        String?
+  attempts     Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@map("scheduled_emails")
+}
+
+// Search Analytics
+model SearchLog {
+  id            Int      @id @default(autoincrement())
+  query         String
+  resultCount   Int
+  executionTime Int
+  timestamp     DateTime @default(now())
+
+  @@map("search_logs")
+}
+
+// Migration Tracking
+model Migration {
+  id             String   @id
+  name           String
+  description    String?
+  version        String
+  appliedAt      DateTime @default(now())
+  executionTime  Int?
+
+  @@map("_migrations")
+}
+
+// API Keys
+model ApiKey {
+  id          Int      @id @default(autoincrement())
+  name        String
+  key         String   @unique
+  userId      Int
+  permissions Json?
+  active      Boolean  @default(true)
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("api_keys")
+}
+
+// Workflow Definitions
+model WorkflowDefinition {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  version     String   @default("1.0.0")
+  definition  Json
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+
+  @@map("workflow_definitions")
+}
+
+// Workflow Instances
+model WorkflowInstance {
+  id        Int      @id @default(autoincrement())
+  workflowId Int
+  recordId  Int
+  recordType String
+  state     String
+  data      Json?
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  workflow WorkflowDefinition @relation(fields: [workflowId], references: [id])
+
+  @@map("workflow_instances")
+}
+
+// Workflow History
+model WorkflowHistory {
+  id        Int      @id @default(autoincrement())
+  instanceId Int
+  fromState String?
+  toState   String
+  action    String?
+  userId    Int?
+  data      Json?
+  createdAt DateTime @default(now())
+
+  // Relations
+  instance WorkflowInstance @relation(fields: [instanceId], references: [id])
+
+  @@map("workflow_history")
+}
+
+// Reports
+model Report {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  type        String   // pdf, excel, csv, html
+  template    String?
+  parameters  Json?
+  schedule    String?  // cron expression
+  lastRunAt   DateTime?
+  nextRunAt   DateTime?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+
+  @@map("reports")
+}
+
+// Report Executions
+model ReportExecution {
+  id        Int      @id @default(autoincrement())
+  reportId  Int
+  status    String   // pending, running, completed, failed
+  filePath  String?
+  error     String?
+  startedAt DateTime @default(now())
+  completedAt DateTime?
+  createdAt DateTime @default(now())
+
+  // Relations
+  report Report @relation(fields: [reportId], references: [id])
+
+  @@map("report_executions")
+}
+
+// Add relations
+model Company {
+  files              File[]
+  partners           Partner[]
+  workflowDefinitions WorkflowDefinition[]
+  reports            Report[]
+}
+
+model WorkflowDefinition {
+  instances WorkflowInstance[]
+}
+
+model WorkflowInstance {
+  history WorkflowHistory[]
+}
+
+model Report {
+  executions ReportExecution[]
+} 

@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: nexajs-db
+    environment:
+      POSTGRES_DB: nexajs
+      POSTGRES_USER: nexajs_user
+      POSTGRES_PASSWORD: nexajs_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./apps/api/prisma/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - nexajs-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: nexajs-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - nexajs-network
+
+  # API Server
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile.dev
+    container_name: nexajs-api
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://nexajs_user:nexajs_password@db:5432/nexajs
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - PORT=3001
+    volumes:
+      - ./apps/api:/app
+      - /app/node_modules
+    depends_on:
+      - db
+      - redis
+    networks:
+      - nexajs-network
+    command: npm run dev
+
+  # Web Frontend
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    container_name: nexajs-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    networks:
+      - nexajs-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  nexajs-network:
+    driver: bridge 
