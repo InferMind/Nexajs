@@ -1,0 +1,1 @@
+export { mockData, mockApi } from './mockData'
