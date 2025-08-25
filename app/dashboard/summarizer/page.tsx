@@ -18,7 +18,8 @@ import {
   Search,
   Calendar,
   FileType,
-  Zap
+  Zap,
+  X
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
