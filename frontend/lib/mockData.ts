@@ -153,6 +153,22 @@ export const mockData = {
       status: 'resolved' as const,
       createdAt: '2024-01-14T16:45:00Z',
       category: 'billing'
+    },
+    {
+      id: '3',
+      subject: 'API integration help needed',
+      message: 'I\'m trying to integrate with your API but getting authentication errors. Can someone help me troubleshoot this?',
+      status: 'pending' as const,
+      createdAt: '2024-01-16T10:30:00Z',
+      category: 'technical'
+    },
+    {
+      id: '4',
+      subject: 'Feature request: Dark mode',
+      message: 'Would it be possible to add a dark mode option to the dashboard? It would be great for working in low-light environments.',
+      status: 'in-progress' as const,
+      createdAt: '2024-01-15T14:20:00Z',
+      category: 'feature-request'
     }
   ],
 
@@ -164,7 +180,9 @@ export const mockData = {
       content: 'Hi [Name],\n\nThank you for taking the time to see our AI solutions demo yesterday. I hope you found it valuable and can see how our platform could help streamline your business processes.\n\nAs discussed, our AI-powered document summarizer could save your team approximately 15 hours per week, while our customer support assistant could handle 60% of routine inquiries automatically.\n\nI\'d love to schedule a follow-up call to discuss how we can customize our solution for your specific needs. Are you available for a 30-minute call this week?\n\nBest regards,\n[Your Name]',
       type: 'follow-up' as const,
       createdAt: '2024-01-15T11:00:00Z',
-      status: 'sent' as const
+      status: 'sent' as const,
+      recipientEmail: 'john.doe@example.com',
+      sentAt: '2024-01-15T11:00:00Z'
     },
     {
       id: '2',
@@ -172,7 +190,8 @@ export const mockData = {
       content: 'Hello [Name],\n\nI hope this email finds you well. I\'m reaching out because I noticed your company has been growing rapidly, and I believe our AI business platform could help you scale even more efficiently.\n\nNexa AI offers:\n• Automated document processing and summarization\n• Intelligent customer support assistance\n• AI-powered sales email generation\n• Advanced analytics and insights\n\nWould you be interested in a 15-minute demo to see how we\'ve helped similar companies reduce operational costs by 30% while improving customer satisfaction?\n\nI\'d be happy to show you exactly how this would work for your business.\n\nBest regards,\n[Your Name]',
       type: 'cold-outreach' as const,
       createdAt: '2024-01-14T13:30:00Z',
-      status: 'draft' as const
+      status: 'draft' as const,
+      recipientEmail: 'sarah.smith@company.com'
     }
   ]
 }
@@ -202,7 +221,7 @@ export const mockApi = {
     const newSummary = {
       id: Date.now().toString(),
       title: file.name,
-      content: 'This is a mock summary of your uploaded document. In a real implementation, this would contain AI-generated insights and key points extracted from your document.',
+      summary: 'This is a mock summary of your uploaded document. In a real implementation, this would contain AI-generated insights and key points extracted from your document.',
       keyPoints: [
         'Key insight extracted from document',
         'Important finding or trend identified',
