@@ -19,18 +19,8 @@ import {
   ThumbsDown
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useSupportQueries, useSupportSubmission } from '@/lib/hooks'
+import { useSupportQueries, useSupportSubmission, SupportQuery } from '@/lib/hooks'
 import { Card, Button, LoadingSpinner } from '@/components/ui'
-
-interface SupportQuery {
-  id: string
-  subject: string
-  message: string
-  status: 'pending' | 'in-progress' | 'resolved'
-  category: string
-  createdAt: string
-  response?: string
-}
 
 export default function SupportPage() {
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new')

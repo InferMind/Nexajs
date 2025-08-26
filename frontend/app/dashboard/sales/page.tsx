@@ -21,19 +21,8 @@ import {
   Search
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useSalesEmails, useSalesEmailGeneration } from '@/lib/hooks'
+import { useSalesEmails, useSalesEmailGeneration, SalesEmail } from '@/lib/hooks'
 import { Card, Button, LoadingSpinner } from '@/components/ui'
-
-interface SalesEmail {
-  id: string
-  subject: string
-  content: string
-  type: string
-  status: 'draft' | 'sent' | 'scheduled'
-  recipientEmail?: string
-  sentAt?: string
-  createdAt: string
-}
 
 export default function SalesPage() {
   const [activeTab, setActiveTab] = useState<'generate' | 'history'>('generate')
