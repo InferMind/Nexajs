@@ -12,6 +12,7 @@ export interface User {
   company?: string;
   plan: string;
   credits: number;
+  avatar?: string;
 }
 
 interface AuthContextType {
