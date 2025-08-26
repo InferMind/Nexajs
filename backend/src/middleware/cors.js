@@ -4,13 +4,22 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       process.env.FRONTEND_URL || 'http://localhost:3000',
       'http://localhost:3000',
       'https://localhost:3000',
-      // Add production domains here
+      // Production domains
+      'https://nexaai-black.vercel.app',
     ];
+
+    // Allow all Vercel preview deployments
+    try {
+      const hostname = new URL(origin).hostname;
+      if (hostname.endsWith('.vercel.app')) {
+        return callback(null, true);
+      }
+    } catch (_) { /* ignore parse errors */ }
 
     if (process.env.NODE_ENV === 'development') {
       // In development, allow any localhost origin
@@ -45,4 +54,7 @@ const corsOptions = {
   maxAge: 86400 // 24 hours
 };
 
-module.exports = cors(corsOptions);
+const middleware = cors(corsOptions);
+middleware.options = corsOptions; // expose options for app.options()
+
+module.exports = middleware;

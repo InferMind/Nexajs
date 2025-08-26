@@ -3,6 +3,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const multer = require('multer');
 const path = require('path');
+const cors = require('cors');
 require('dotenv').config();
 
 // Import middleware
@@ -45,6 +46,14 @@ app.use(compression());
 
 // CORS middleware
 app.use(corsMiddleware);
+
+// Handle preflight globally using same CORS options
+try {
+  const corsOptions = require('./middleware/cors').options || undefined;
+  app.options('*', corsOptions ? cors(corsOptions) : cors());
+} catch (_) {
+  app.options('*', cors());
+}
 
 // Rate limiting
 app.use(generalLimiter);
