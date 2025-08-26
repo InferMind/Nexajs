@@ -1,9 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { authAPI } from './api';
+import { authAPI, setAuthToken, removeAuthToken, isAuthenticated as checkAuth } from './api';
 import { mockData, mockApi } from './mockData';
-import { supabase } from './supabase';
 
 // User type definition
 export interface User {
@@ -40,33 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Initialize auth state
   useEffect(() => {
     initializeAuth();
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.access_token) {
-        try {
-          const profile = await authAPI.getProfile();
-          if (profile?.user) setUser(profile.user);
-        } catch {
-          // ignore
-        }
-      } else {
-        setUser(null);
-      }
-    });
-    return () => {
-      listener.subscription.unsubscribe();
-    };
   }, []);
 
   const initializeAuth = async () => {
     try {
       if (useMockData) {
+        // In mock mode, check if user was previously logged in
         const savedUser = localStorage.getItem('mock_user');
         if (savedUser) {
           setUser(JSON.parse(savedUser));
         }
       } else {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.access_token) {
+        // Try to get current user from backend
+        if (checkAuth()) {
           const response = await authAPI.getProfile();
           if (response.user) {
             setUser(response.user);
@@ -75,6 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to initialize auth:', error);
+      // Clear invalid token
+      removeAuthToken();
     } finally {
       setIsLoading(false);
     }
@@ -84,20 +71,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       if (useMockData) {
+        // Use mock API
         const result = await mockApi.login(email, password);
         setUser(result.user);
         localStorage.setItem('mock_user', JSON.stringify(result.user));
         return { success: true };
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) return { success: false, error: error.message };
-        const profile = await authAPI.getProfile();
-        if (profile?.user) setUser(profile.user);
-        return { success: true };
+        // Use real API
+        const response = await authAPI.login({ email, password });
+        if (response.token && response.user) {
+          setAuthToken(response.token);
+          setUser(response.user);
+          return { success: true };
+        } else {
+          return { 
+            success: false, 
+            error: response.error || 'Login failed' 
+          };
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Login failed' };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Login failed' 
+      };
     } finally {
       setIsLoading(false);
     }
@@ -112,25 +110,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       if (useMockData) {
+        // Use mock API
         const result = await mockApi.signup(userData);
         setUser(result.user);
         localStorage.setItem('mock_user', JSON.stringify(result.user));
         return { success: true };
       } else {
-        const { error } = await supabase.auth.signUp({
-          email: userData.email,
-          password: userData.password,
-          options: { data: { name: userData.name, company: userData.company } }
+        // Use real API
+        const response = await authAPI.register({
+          ...userData,
+          plan: 'free' // Default plan
         });
-        if (error) return { success: false, error: error.message };
-        // After sign up, user may need to verify email depending on Supabase settings
-        const profile = await authAPI.getProfile().catch(() => null);
-        if (profile?.user) setUser(profile.user);
-        return { success: true };
+        if (response.token && response.user) {
+          setAuthToken(response.token);
+          setUser(response.user);
+          return { success: true };
+        } else {
+          return { 
+            success: false, 
+            error: response.error || 'Signup failed' 
+          };
+        }
       }
     } catch (error) {
       console.error('Signup error:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Signup failed' };
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Signup failed' 
+      };
     } finally {
       setIsLoading(false);
     }
@@ -138,16 +145,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      if (useMockData) {
-        setUser(null);
-        localStorage.removeItem('mock_user');
-      } else {
-        await supabase.auth.signOut();
-        setUser(null);
+      if (!useMockData) {
+        removeAuthToken();
       }
+      setUser(null);
+      localStorage.removeItem('mock_user');
     } catch (error) {
       console.error('Logout error:', error);
+      // Still clear local state even if API call fails
       setUser(null);
+      localStorage.removeItem('mock_user');
+      removeAuthToken();
     }
   };
 

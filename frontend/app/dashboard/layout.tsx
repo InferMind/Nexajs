@@ -134,17 +134,16 @@ export default function DashboardLayout({
               )
             })}
           </nav>
-
           <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl">
-            {/* Help & Account Section */}
-            <div className="px-4 py-4 border-t border-gray-200 space-y-2">
-              <Link
-                href="/help"
-                className="nav-link text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              >
-                <HelpCircle className="w-5 h-5 mr-3" />
-                Help & Support
-              </Link>
+          {/* Help & Account Section */}
+          <div className="px-4 py-4 border-t border-gray-200 space-y-2">
+            <Link
+              href="/help"
+              className="nav-link text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+            >
+              <HelpCircle className="w-5 h-5 mr-3" />
+              Help & Support
+            </Link>
             </div>
           </div>
 

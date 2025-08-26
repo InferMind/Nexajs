@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, Sparkles, ArrowRight, Github, Chrome } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../../lib/auth-context'
-import { supabase } from '../../../lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -147,33 +146,11 @@ export default function LoginPage() {
 
           {/* Social Login */}
           <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              className="btn-secondary group"
-              onClick={async () => {
-                toast('GitHub not configured')
-              }}
-            >
+            <button className="btn-secondary group">
               <Github className="w-4 h-4 mr-2" />
               GitHub
             </button>
-            <button
-              type="button"
-              className="btn-secondary group"
-              onClick={async () => {
-                try {
-                  const { error } = await supabase.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                      redirectTo: `${window.location.origin}/dashboard`
-                    }
-                  })
-                  if (error) throw error
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : 'Google sign-in failed')
-                }
-              }}
-            >
+            <button className="btn-secondary group">
               <Chrome className="w-4 h-4 mr-2" />
               Google
             </button>
