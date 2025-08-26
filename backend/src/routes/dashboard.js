@@ -17,23 +17,30 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
 router.get('/stats', authMiddleware, async (req, res) => {
   try {
     let stats;
+    let activities = [];
 
     if (supabase) {
       // Get real stats from database
       const { data: documents } = await supabase
         .from('documents')
-        .select('id, created_at')
-        .eq('user_id', req.userId);
+        .select('id, title, created_at')
+        .eq('user_id', req.userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
       const { data: supportQueries } = await supabase
         .from('support_queries')
-        .select('id, created_at')
-        .eq('user_id', req.userId);
+        .select('id, subject, created_at')
+        .eq('user_id', req.userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-      const { data: salesEmails } = await supabase
-        .from('sales_emails')
-        .select('id, created_at')
-        .eq('user_id', req.userId);
+      const { data: sentEmails } = await supabase
+        .from('sent_emails')
+        .select('id, subject, created_at')
+        .eq('user_id', req.userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
 
       const { data: user } = await supabase
         .from('users')
@@ -87,6 +94,32 @@ router.get('/stats', authMiddleware, async (req, res) => {
           textColor: 'text-yellow-600'
         }
       ];
+
+      // Build activities feed from latest items
+      activities = [
+        ...(documents || []).map(d => ({
+          id: d.id,
+          type: 'document',
+          title: d.title || 'Document',
+          action: 'Uploaded',
+          created_at: d.created_at,
+        })),
+        ...(sentEmails || []).map(s => ({
+          id: s.id,
+          type: 'email',
+          title: s.subject || 'Email',
+          action: 'Sent',
+          created_at: s.created_at,
+        })),
+        ...(supportQueries || []).map(q => ({
+          id: q.id,
+          type: 'support',
+          title: q.subject || 'Support Query',
+          action: 'Submitted',
+          created_at: q.created_at,
+        })),
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 20);
+
     } else {
       // Mock stats for development
       stats = [
@@ -135,9 +168,15 @@ router.get('/stats', authMiddleware, async (req, res) => {
           textColor: 'text-yellow-600'
         }
       ];
+
+      activities = [
+        { id: '1', type: 'document', title: 'Q4 Report.pdf', action: 'Summarized', created_at: new Date().toISOString() },
+        { id: '2', type: 'email', title: 'Email to TechCorp', action: 'Generated', created_at: new Date().toISOString() },
+        { id: '3', type: 'support', title: 'FAQ update', action: 'Modified', created_at: new Date().toISOString() },
+      ];
     }
 
-    res.json({ stats });
+    res.json({ stats, activities });
   } catch (error) {
     console.error('Dashboard stats error:', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -372,9 +372,9 @@ export default function AppsPage() {
                       </Button>
                     </Link>
                   ) : app.status === 'available' ? (
-                    <Button className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600">
+                    <Button className="flex-1 inline-flex items-center justify-center rounded-xl bg-white text-blue-700 hover:bg-gray-50 shadow-sm border border-gray-200 transition-all hover:shadow-md">
                       <Download className="w-4 h-4 mr-2" />
-                      Install
+                      <span className="font-medium">Install</span>
                     </Button>
                   ) : (
                     <Button disabled className="flex-1">

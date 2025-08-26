@@ -57,7 +57,7 @@ router.post('/register', [
         .insert([
           {
             email,
-            password: hashedPassword,
+            password_hash: hashedPassword,
             name,
             company,
             plan,
@@ -160,7 +160,7 @@ router.post('/login', [
     }
 
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash || user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -190,46 +190,42 @@ router.post('/login', [
   }
 });
 
-// Get user profile
-router.get('/profile', async (req, res) => {
+// Get user profile (Supabase or JWT via middleware)
+router.get('/profile', require('../middleware/auth'), async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
+    if (!supabase) {
+      return res.status(500).json({ error: 'Supabase not configured' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    let user;
+    // Ensure user exists in our users table; create if missing
+    const { data: foundUser } = await supabase
+      .from('users')
+      .select('id, email, name, company, plan, credits, created_at')
+      .eq('id', req.userId)
+      .single();
 
-    if (supabase) {
-      const { data: foundUser, error } = await supabase
+    let user = foundUser;
+
+    if (!user) {
+      const { data: created, error: insertError } = await supabase
         .from('users')
+        .insert([
+          {
+            id: req.userId,
+            email: req.userEmail,
+            name: req.userEmail?.split('@')[0] || 'User',
+            plan: 'free',
+            credits: 5,
+            created_at: new Date().toISOString(),
+          },
+        ])
         .select('id, email, name, company, plan, credits, created_at')
-        .eq('id', decoded.userId)
         .single();
-
-      if (error || !foundUser) {
-        return res.status(404).json({ error: 'User not found' });
+      if (insertError) {
+        console.error('User bootstrap error:', insertError);
+        return res.status(500).json({ error: 'Failed to bootstrap user profile' });
       }
-
-      user = foundUser;
-    } else {
-      // Find user in mock storage
-      const foundUser = Array.from(mockUsers.values()).find(u => u.id === decoded.userId);
-      if (!foundUser) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      user = {
-        id: foundUser.id,
-        email: foundUser.email,
-        name: foundUser.name,
-        company: foundUser.company,
-        plan: foundUser.plan,
-        credits: foundUser.credits,
-        created_at: foundUser.created_at
-      };
+      user = created;
     }
 
     res.json({ user });
