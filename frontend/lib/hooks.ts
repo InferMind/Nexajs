@@ -21,7 +21,7 @@ export interface SupportQuery {
   id: string;
   subject: string;
   message: string;
-  status: string;
+  status: 'pending' | 'in-progress' | 'resolved';
   category?: string;
   createdAt: string;
   response?: string;
@@ -32,7 +32,7 @@ export interface SalesEmail {
   subject: string;
   content: string;
   type: string;
-  status: string;
+  status: 'draft' | 'sent' | 'scheduled';
   recipientEmail?: string;
   sentAt?: string;
   createdAt: string;
@@ -124,7 +124,7 @@ export function useDocumentUpload() {
 // Support hooks
 export function useSupportQueries() {
   return useApiData(
-    () => api.getSupportQueries(),
+    () => supportAPI.getQueries(),
     mockData.supportQueries
   );
 }
@@ -152,7 +152,7 @@ export function useSupportSubmission() {
         };
         return newQuery;
       } else {
-        const response = await api.submitSupportQuery(query);
+        const response = await supportAPI.submitQuery(query);
         if (response.success && response.data) {
           return response.data;
         } else {
@@ -177,7 +177,7 @@ export function useSupportSubmission() {
         const result = await mockApi.generateSupportResponse('mock query');
         return result.response;
       } else {
-        const response = await api.generateSupportResponse(queryId);
+        const response = await supportAPI.generateSupportResponse(queryId);
         if (response.success && response.data) {
           return response.data.response;
         } else {
@@ -199,7 +199,7 @@ export function useSupportSubmission() {
 // Sales hooks
 export function useSalesEmails() {
   return useApiData(
-    () => api.getSalesEmails(),
+    () => salesAPI.getHistory(),
     mockData.salesEmails
   );
 }
@@ -221,7 +221,15 @@ export function useSalesEmailGeneration() {
         const result = await mockApi.generateSalesEmail(type, context);
         return result;
       } else {
-        const response = await api.generateSalesEmail({ type, context });
+        const response = await salesAPI.generateEmail({ 
+          emailType: type, 
+          customerName: context.recipientName || '',
+          customerCompany: context.recipientCompany || '',
+          customerEmail: context.recipientEmail || '',
+          industry: context.industry || '',
+          painPoint: context.painPoint || '',
+          productInterest: context.productService || ''
+        });
         if (response.success && response.data) {
           return response.data;
         } else {
@@ -250,7 +258,7 @@ export function useSalesEmailGeneration() {
         await mockApi.delay(1500);
         return true;
       } else {
-        const response = await api.sendSalesEmail(data);
+        const response = await salesAPI.sendEmail(data);
         if (response.success) {
           return true;
         } else {
@@ -283,14 +291,14 @@ export function useDashboardStats() {
 // Billing hooks
 export function useCredits() {
   return useApiData(
-    () => api.getCredits(),
+    () => billingAPI.getInfo(),
     { credits: mockData.user.credits, transactions: [] }
   );
 }
 
 export function useBillingHistory() {
   return useApiData(
-    () => api.getBillingHistory(),
+    () => billingAPI.getHistory(),
     []
   );
 }
@@ -299,7 +307,7 @@ export function useCreditPurchase() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const purchaseCredits = async (planId: string): Promise<string | null> => {
+  const purchaseCredits = async (amount: number): Promise<string | null> => {
     setIsPurchasing(true);
     setError(null);
 
@@ -308,7 +316,7 @@ export function useCreditPurchase() {
         await mockApi.delay(2000);
         return 'https://checkout.stripe.com/mock-session';
       } else {
-        const response = await api.purchaseCredits(planId);
+        const response = await billingAPI.purchaseCredits(amount);
         if (response.success && response.data) {
           return response.data.url;
         } else {

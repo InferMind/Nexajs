@@ -126,6 +126,13 @@ export const supportAPI = {
   getQueries: async () => {
     return makeRequest('/support/queries');
   },
+
+  generateSupportResponse: async (queryId: string) => {
+    return makeRequest('/support/generate-response', {
+      method: 'POST',
+      body: JSON.stringify({ queryId }),
+    });
+  },
 };
 
 // Sales API

@@ -153,6 +153,22 @@ export const mockData = {
       status: 'resolved' as const,
       createdAt: '2024-01-14T16:45:00Z',
       category: 'billing'
+    },
+    {
+      id: '3',
+      subject: 'API integration help needed',
+      message: 'I\'m trying to integrate with your API but getting authentication errors. Can someone help me troubleshoot this?',
+      status: 'pending' as const,
+      createdAt: '2024-01-16T10:30:00Z',
+      category: 'technical'
+    },
+    {
+      id: '4',
+      subject: 'Feature request: Dark mode',
+      message: 'Would it be possible to add a dark mode option to the dashboard? It would be great for working in low-light environments.',
+      status: 'in-progress' as const,
+      createdAt: '2024-01-15T14:20:00Z',
+      category: 'feature-request'
     }
   ],
 
@@ -205,7 +221,7 @@ export const mockApi = {
     const newSummary = {
       id: Date.now().toString(),
       title: file.name,
-      content: 'This is a mock summary of your uploaded document. In a real implementation, this would contain AI-generated insights and key points extracted from your document.',
+      summary: 'This is a mock summary of your uploaded document. In a real implementation, this would contain AI-generated insights and key points extracted from your document.',
       keyPoints: [
         'Key insight extracted from document',
         'Important finding or trend identified',
