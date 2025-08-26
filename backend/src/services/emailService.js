@@ -4,10 +4,10 @@ class EmailService {
   constructor() {
     this.transporter = null;
     if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-      this.transporter = nodemailer.createTransporter({
+      this.transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: false, // true for 465, false for other ports
+        port: Number(process.env.SMTP_PORT) || 587,
+        secure: String(process.env.SMTP_PORT) === '465', // true for 465, false otherwise
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS,

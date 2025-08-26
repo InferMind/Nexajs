@@ -308,9 +308,9 @@ export default function StorePage() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold mb-2">$29/month</div>
-                <Button className="bg-white text-blue-600 hover:bg-blue-50">
+                <Button className="inline-flex items-center px-4 py-2 rounded-xl bg-white text-blue-700 hover:bg-gray-50 shadow-sm border border-white/30 transition-all hover:shadow-md">
                   <Download className="w-4 h-4 mr-2" />
-                  Install Now
+                  <span className="font-medium">Install Now</span>
                 </Button>
               </div>
             </div>

@@ -25,10 +25,10 @@ if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_KEY) {
 // Configure email transporter (optional)
 let emailTransporter = null;
 if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-  emailTransporter = nodemailer.createTransporter({
+  emailTransporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    secure: false,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: String(process.env.SMTP_PORT) === '465',
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -215,6 +215,13 @@ router.post('/send-email', authMiddleware, async (req, res) => {
     if (!emailId || !recipientEmail) {
       return res.status(400).json({ 
         error: 'Email ID and recipient email are required' 
+      });
+    }
+
+    if (!emailTransporter) {
+      return res.status(503).json({
+        error: 'Email service not configured',
+        message: 'SMTP settings are missing on the server.'
       });
     }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { 
   FileText, 
@@ -66,44 +66,19 @@ export default function DashboardPage() {
     }
   ]
 
-  const recentActivity = [
-    {
-      type: 'document',
-      title: 'Q4 Financial Report.pdf',
-      action: 'Summarized',
-      time: '2 hours ago',
-      icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      type: 'email',
-      title: 'Cold email to TechCorp',
-      action: 'Generated',
-      time: '4 hours ago',
-      icon: Mail,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      type: 'support',
-      title: 'FAQ updated',
-      action: 'Modified',
-      time: '1 day ago',
-      icon: MessageSquare,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-    {
-      type: 'document',
-      title: 'Product Roadmap.docx',
-      action: 'Summarized',
-      time: '2 days ago',
-      icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+  const [recentActivity, setRecentActivity] = useState<any[]>([])
+
+  useEffect(() => {
+    if (dashboardData?.activities) {
+      setRecentActivity(dashboardData.activities.map((a: any) => ({
+        ...a,
+        icon: a.type === 'document' ? FileText : a.type === 'email' ? Mail : MessageSquare,
+        color: a.type === 'document' ? 'text-blue-600' : a.type === 'email' ? 'text-green-600' : 'text-purple-600',
+        bgColor: a.type === 'document' ? 'bg-blue-100' : a.type === 'email' ? 'bg-green-100' : 'bg-purple-100',
+        time: new Date(a.created_at).toLocaleString(),
+      })))
     }
-  ]
+  }, [dashboardData])
 
   const usageData = [
     { name: 'Mon', summarizer: 4, sales: 2, support: 1 },
@@ -139,9 +114,9 @@ export default function DashboardPage() {
                 <option value="30d">Last 30 days</option>
                 <option value="90d">Last 90 days</option>
               </select>
-              <button className="btn-primary btn-sm">
+              <button className="inline-flex items-center px-3 py-2 rounded-xl bg-white text-blue-700 hover:bg-gray-50 shadow-sm border border-gray-200 transition-all hover:shadow-md">
                 <Plus className="w-4 h-4 mr-2" />
-                New Task
+                <span className="font-medium">New Task</span>
               </button>
             </div>
           </div>
@@ -365,8 +340,8 @@ export default function DashboardPage() {
                 <p className="text-blue-100 mb-4">
                   Get 500 credits per month and unlock advanced features.
                 </p>
-                <Link href="/dashboard/billing" className="btn bg-white text-blue-600 hover:bg-gray-100">
-                  Upgrade Now
+                <Link href="/dashboard/billing" className="inline-flex items-center px-4 py-2 rounded-xl bg-white text-blue-600 hover:bg-gray-100 shadow-sm border border-white/20 transition-all hover:shadow-md">
+                  <span className="font-medium">Upgrade Now</span>
                 </Link>
               </div>
               <div className="hidden md:block">

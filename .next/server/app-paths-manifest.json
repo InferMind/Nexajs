@@ -1,0 +1,7 @@
+{
+  "/dashboard/summarizer/page": "app/dashboard/summarizer/page.js",
+  "/dashboard/store/page": "app/dashboard/store/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/billing/page": "app/dashboard/billing/page.js",
+  "/dashboard/settings/page": "app/dashboard/settings/page.js"
+}

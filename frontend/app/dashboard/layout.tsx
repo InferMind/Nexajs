@@ -33,6 +33,7 @@ const navigation = [
   { name: 'Support', href: '/dashboard/support', icon: MessageSquare },
   { name: 'Sales', href: '/dashboard/sales', icon: Mail },
   { name: 'Billing', href: '/dashboard/billing', icon: CreditCard },
+  { name: 'Profile', href: '/dashboard/profile', icon: User },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
@@ -70,7 +71,7 @@ export default function DashboardLayout({
       <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-white/80 backdrop-blur-xl border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-y-auto">
           {/* Logo */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             <Link href="/dashboard" className="flex items-center space-x-3">
@@ -133,9 +134,9 @@ export default function DashboardLayout({
               )
             })}
           </nav>
-
-          {/* Help Section */}
-          <div className="px-4 py-4 border-t border-gray-200">
+          <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl">
+          {/* Help & Account Section */}
+          <div className="px-4 py-4 border-t border-gray-200 space-y-2">
             <Link
               href="/help"
               className="nav-link text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -143,6 +144,7 @@ export default function DashboardLayout({
               <HelpCircle className="w-5 h-5 mr-3" />
               Help & Support
             </Link>
+            </div>
           </div>
 
           {/* User Profile */}
@@ -163,7 +165,7 @@ export default function DashboardLayout({
               {userMenuOpen && (
                 <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 py-2">
                   <Link
-                    href="/dashboard/settings"
+                    href="/dashboard/profile"
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                   >
                     <User className="w-4 h-4 mr-3" />

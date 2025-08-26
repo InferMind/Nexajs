@@ -57,7 +57,7 @@ router.post('/register', [
         .insert([
           {
             email,
-            password: hashedPassword,
+            password_hash: hashedPassword,
             name,
             company,
             plan,
@@ -142,7 +142,7 @@ router.post('/login', [
       // Find user in Supabase
       const { data: foundUser, error } = await supabase
         .from('users')
-        .select('*')
+        .select('id, email, password_hash, name, company, plan, credits')
         .eq('email', email)
         .single();
 
@@ -160,7 +160,7 @@ router.post('/login', [
     }
 
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash || user.password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
