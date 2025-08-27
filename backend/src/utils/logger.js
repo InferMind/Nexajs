@@ -3,13 +3,21 @@ const path = require('path');
 
 class Logger {
   constructor() {
+    this.isServerless = !!process.env.VERCEL || process.env.SERVERLESS === 'true';
     this.logDir = path.join(__dirname, '../../logs');
-    this.ensureLogDirectory();
+    if (!this.isServerless) {
+      this.ensureLogDirectory();
+    }
   }
 
   ensureLogDirectory() {
-    if (!fs.existsSync(this.logDir)) {
-      fs.mkdirSync(this.logDir, { recursive: true });
+    try {
+      if (!fs.existsSync(this.logDir)) {
+        fs.mkdirSync(this.logDir, { recursive: true });
+      }
+    } catch (e) {
+      // On serverless (read-only fs), just skip file logging
+      this.isServerless = true;
     }
   }
 
@@ -20,15 +28,20 @@ class Logger {
   }
 
   writeToFile(filename, content) {
+    if (this.isServerless) return; // skip file writes on serverless
     const filePath = path.join(this.logDir, filename);
-    fs.appendFileSync(filePath, content);
+    try {
+      fs.appendFileSync(filePath, content);
+    } catch (_) {
+      // ignore file write errors in serverless
+    }
   }
 
   info(message, meta = {}) {
     const formatted = this.formatMessage('info', message, meta);
     console.log(formatted.trim());
     
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && !this.isServerless) {
       this.writeToFile('app.log', formatted);
     }
   }
@@ -37,7 +50,7 @@ class Logger {
     const formatted = this.formatMessage('error', message, meta);
     console.error(formatted.trim());
     
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && !this.isServerless) {
       this.writeToFile('error.log', formatted);
     }
   }
@@ -46,7 +59,7 @@ class Logger {
     const formatted = this.formatMessage('warn', message, meta);
     console.warn(formatted.trim());
     
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === 'production' && !this.isServerless) {
       this.writeToFile('app.log', formatted);
     }
   }
